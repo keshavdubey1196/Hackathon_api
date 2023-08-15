@@ -59,6 +59,13 @@ def get_hakthon_image(filename):
         os.path.join(app.config['UPLOAD_FOLDER'], 'hakthon_imgs'), filename)
 
 
+@app.route('/uploads/submission_files/<filename>', methods=['GET'])
+def get_submisssion_files(filename):
+    return send_from_directory(
+        os.path.join(
+            app.config['UPLOAD_FOLDER'], 'submission_files'), filename)
+
+
 @app.route('/info', methods=['GET'])
 def info():
     return "<h1>This is home route</h1>"
@@ -409,7 +416,7 @@ def submission():
             filename = save_submisssion_files(file)
             new_submission = Submission(
                 file=filename,
-                url=url,
+                url="None",
                 user_id=user_id,
                 hackathon_id=hackathon_id
             )
@@ -423,7 +430,7 @@ def submission():
             filename = save_submisssion_files(file)
             new_submission = Submission(
                 file=filename,
-                url=url,
+                url="None",
                 user_id=user_id,
                 hackathon_id=hackathon_id
             )
@@ -458,3 +465,34 @@ def submission():
             "message":
             f"{user.name} submitted to {hackathon.title} suceessfully"
         }, 200)
+
+
+@app.route('/api/user_submissions/<int:user_id>', methods=["GET"])
+def get_user_submissions(user_id):
+    user = User.query.filter_by(id=user_id).first()
+
+    if not user:
+        return jsonify({'error': "User not found"}, 404)
+
+    enrolled_hackathons = user.participated_hackathons
+    # print(enrolled_hackathons)
+    user_submissions = []
+
+    for hackathon in enrolled_hackathons:
+        submissions = Submission.query.filter_by(
+            user_id=user_id, hackathon_id=hackathon.id
+        ).all()
+
+        for submission in submissions:
+            user_submission = {
+                "id": submission.id,
+                "file": f"/uploads/submission_files/{submission.file}",
+                "url": submission.url,
+                "created_at": submission.created_at,
+                "hackathon_title": hackathon.title,
+                "hackathon_id": hackathon.id
+            }
+            user_submissions.append(user_submission)
+            # print(submission.id)
+
+    return jsonify(user_submissions, 200)
