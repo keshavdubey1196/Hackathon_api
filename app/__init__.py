@@ -15,6 +15,11 @@ db = SQLAlchemy(app)
 
 
 bcrypt = Bcrypt(app)
+UPLOAD_FOLDER = os.path.join(app.root_path, 'uploads')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# create folders if they don't exist in project
+os.makedirs(os.path.join(UPLOAD_FOLDER, 'hakthon_imgs'), exist_ok=True)
+os.makedirs(os.path.join(UPLOAD_FOLDER, 'submission_files'), exist_ok=True)
 
 
 
