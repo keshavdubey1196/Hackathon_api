@@ -1,4 +1,4 @@
-from app import app
+from flask import current_app
 import secrets
 import os
 from PIL import Image
@@ -20,7 +20,7 @@ def save_hkthon_imgs(file):
     _, ext = os.path.splitext(file.filename)
     picture_fn = random_hex + ext
     picture_path = os.path.join(
-        app.config['UPLOAD_FOLDER'], 'hakthon_imgs', picture_fn)
+        current_app.config['UPLOAD_FOLDER'], 'hakthon_imgs', picture_fn)
     output_size = (200, 200)
     new_file = Image.open(file)
     new_file.thumbnail(output_size)

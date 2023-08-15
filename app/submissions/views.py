@@ -1,5 +1,6 @@
-from flask import jsonify, request, send_from_directory, Blueprint
-from app import app, db
+from flask import jsonify, request, send_from_directory, Blueprint, \
+                  current_app
+from app import db
 from app.models import User, Hackathon, Submission
 import os
 from app.submissions.utils import save_submisssion_files, allowed_files
@@ -12,7 +13,7 @@ submissions = Blueprint('submissions', __name__)
 def get_submisssion_files(filename):
     return send_from_directory(
         os.path.join(
-            app.config['UPLOAD_FOLDER'], 'submission_files'), filename)
+            current_app.config['UPLOAD_FOLDER'], 'submission_files'), filename)
 
 
 @submissions.route('/api/submission', methods=['POST'])

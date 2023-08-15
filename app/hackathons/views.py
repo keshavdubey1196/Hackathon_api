@@ -1,6 +1,7 @@
-from flask import Blueprint, jsonify, request, send_from_directory
+from flask import Blueprint, jsonify, request, send_from_directory, \
+                  current_app
 from app.models import User, Hackathon
-from app import db, app
+from app import db
 from app.hackathons.utils import allowed_files, save_hkthon_imgs
 import os
 
@@ -11,7 +12,8 @@ hackathons = Blueprint('hackathons', __name__)
 @hackathons.route('/uploads/hakthon_imgs/<filename>', methods=['GET'])
 def get_hakthon_image(filename):
     return send_from_directory(
-        os.path.join(app.config['UPLOAD_FOLDER'], 'hakthon_imgs'), filename)
+        os.path.join(
+            current_app.config['UPLOAD_FOLDER'], 'hakthon_imgs'), filename)
 
 
 @hackathons.route('/api/addhackathon', methods=['POST'])

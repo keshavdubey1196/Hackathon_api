@@ -1,6 +1,6 @@
 import os
 import secrets
-from app import app
+from flask import current_app
 from PIL import Image
 
 
@@ -21,7 +21,7 @@ def save_submisssion_files(file):
     if str(ext) in ['.png', '.jpg', '.jpeg']:
         picture_fn = random_hex + ext
         picture_path = os.path.join(
-            app.config['UPLOAD_FOLDER'], 'submission_files', picture_fn)
+            current_app.config['UPLOAD_FOLDER'], 'submission_files', picture_fn)
         output_size = (200, 200)
         new_file = Image.open(file)
         new_file.thumbnail(output_size)
@@ -30,6 +30,6 @@ def save_submisssion_files(file):
     else:
         fn = random_hex + ext
         f_path = os.path.join(
-            app.config['UPLOAD_FOLDER'], 'submission_files', fn)
+            current_app.config['UPLOAD_FOLDER'], 'submission_files', fn)
         file.save(f_path)
         return fn
