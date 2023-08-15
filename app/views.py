@@ -1,6 +1,6 @@
 from app import app, bcrypt, db
 from flask import jsonify, request, send_from_directory
-from app.models import User, Hackathon
+from app.models import User, Hackathon, Submission
 import ast
 # from werkzeug.utils import secure_filename
 import secrets
@@ -31,6 +31,26 @@ def save_hkthon_imgs(file):
     new_file.save(picture_path)
 
     return picture_fn
+
+
+def save_submisssion_files(file):
+    random_hex = secrets.token_hex(8)
+    _, ext = os.path.splitext(file.filename)
+    if str(ext) in ['.png', '.jpg', '.jpeg']:
+        picture_fn = random_hex + ext
+        picture_path = os.path.join(
+            app.config['UPLOAD_FOLDER'], 'submission_files', picture_fn)
+        output_size = (200, 200)
+        new_file = Image.open(file)
+        new_file.thumbnail(output_size)
+        new_file.save(picture_path)
+        return picture_fn
+    else:
+        fn = random_hex + ext
+        f_path = os.path.join(
+            app.config['UPLOAD_FOLDER'], 'submission_files', fn)
+        file.save(f_path)
+        return fn
 
 
 @app.route('/uploads/hakthon_imgs/<filename>', methods=['GET'])
@@ -239,12 +259,6 @@ def enroll():
                 "error": "User or Hackathon or both not Found! Wrong Id(s)."
             }, 400)
 
-    # hackathons_participated = user.participated_hackathons
-    # if hackathon not in hackathons_participated:
-    #     return jsonify({
-    #         "error": "You have not participated, therefore cannot submit"
-    #     }, 400)
-
     # is user already enrolled in hackathon
     if hackathon in user.participated_hackathons:
         return jsonify({
@@ -331,3 +345,116 @@ def unenroll():
         {
             "message": f"{user.name} unenrolled from {hackathon.title}"
         }, 400)
+
+
+@app.route('/api/submission', methods=['POST'])
+def submission():
+    data = request.form
+
+    if not data:
+        return jsonify({"error": "Empty form sent"}, 400)
+
+    user_id = data['user_id']
+    hackathon_id = data['hackathon_id']
+    file = request.files['file']
+    url = data['url']
+
+    # check if all required fields are provided
+    if not (user_id and hackathon_id and (file and url)):
+        return jsonify(
+            {
+                "error":
+                "user_id,hackathon_id and either file or url is required!"
+            }, 400)
+
+    user = User.query.filter_by(id=user_id).first()
+    hackathon = Hackathon.query.filter_by(id=hackathon_id).first()
+
+    if not user or not hackathon:
+        return jsonify(
+            {
+                "error": "user or hackathon not found. Wrong id(s) provided"
+            }, 400)
+
+    # check if user is admin
+    if user.is_admin:
+        return jsonify({"error": "admins cannot submit or participate"}, 400)
+
+    hackathons_participated = user.participated_hackathons
+    if hackathon not in hackathons_participated:
+        return jsonify({
+            "error": "You have not participated, therefore cannot submit"
+        }, 400)
+
+    # existing submisssion
+    existing_submission = Submission.query.filter_by(
+        user_id=user_id, hackathon_id=hackathon_id).first()
+    if existing_submission:
+        return jsonify(
+            {
+                "error": "User already have submitted on this hackathon"
+            }, 409)
+
+    if not allowed_files(file.filename, ['pdf', 'png', 'jpg', 'jpeg']):
+        return jsonify(
+            {
+                "error":
+                "Invalid file type. Allowed are jpg, jpeg, pdf, png, pdf"
+            }, 400)
+
+    sub_type = hackathon.submission_type.lower()
+
+    if sub_type == "file":
+        if allowed_files(file.filename, ['pdf']):
+            filename = save_submisssion_files(file)
+            new_submission = Submission(
+                file=filename,
+                url=url,
+                user_id=user_id,
+                hackathon_id=hackathon_id
+            )
+        else:
+            return jsonify({
+                "error": "This hackathon only accepts pdf files"
+            }, 400)
+
+    elif sub_type == "image":
+        if allowed_files(file.filename, ['jpg', 'jpeg', 'png']):
+            filename = save_submisssion_files(file)
+            new_submission = Submission(
+                file=filename,
+                url=url,
+                user_id=user_id,
+                hackathon_id=hackathon_id
+            )
+        else:
+            return jsonify({
+                "error":
+                "This hackathon accepts images in format jpg, jpeg and png"
+            }, 400)
+    elif sub_type == 'url':
+        if url != str(url):
+            return jsonify({
+                "error": "This hackathon accepts url. Provide a url"
+            })
+        else:
+            new_submission = Submission(
+                file='None',
+                url=url,
+                user_id=user_id,
+                hackathon_id=hackathon_id
+            )
+
+    else:
+        return jsonify(
+            {
+                "error": "invalid submission type for this hackathon"
+            }, 400)
+    db.session.add(new_submission)
+    db.session.commit()
+
+    return jsonify(
+        {
+            "message":
+            f"{user.name} submitted to {hackathon.title} suceessfully"
+        }, 200)
