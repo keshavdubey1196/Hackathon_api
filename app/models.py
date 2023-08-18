@@ -1,6 +1,7 @@
 from datetime import datetime
 from app import db
 
+
 # Association table for MtoM rel bw hackathon and users
 user_hackathons = db.Table('user_hackathons',
                            db.Column("id", db.Integer(), primary_key=True,
@@ -16,8 +17,9 @@ user_hackathons = db.Table('user_hackathons',
 class User(db.Model):
     __tablename__ = 'users'
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(100), nullable=False)
+    id = db.Column(db.Integer(), primary_key=True, autoincrement=True)
+    public_id = db.Column(db.String(50), unique=True, nullable=False)
+    username = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(200), unique=True, nullable=False)
     created_at = db.Column(
@@ -25,7 +27,8 @@ class User(db.Model):
     is_admin = db.Column(db.Boolean(), default=False, nullable=False)
 
     created_hackathons = db.relationship(
-        'Hackathon', backref='creator', lazy=True)
+        'Hackathon', backref='creator', lazy=True,
+        cascade='all, delete-orphan')
 
     participated_hackathons = db.relationship(
         'Hackathon', secondary=user_hackathons,
@@ -46,7 +49,10 @@ class Hackathon(db.Model):
         db.DateTime(), default=datetime.utcnow)
     start_datetime = db.Column(db.DateTime(), nullable=True)
     end_datetime = db.Column(db.DateTime(), nullable=True)
-    creator_id = db.Column(db.Integer(), db.ForeignKey('users.id'))
+    submissions = db.relationship(
+        'Submission', backref='hackathon', lazy=True,
+        cascade='all, delete-orphan')
+    creator_id = db.Column(db.String(50), db.ForeignKey('users.public_id'))
 
 
 class Submission(db.Model):
@@ -57,17 +63,9 @@ class Submission(db.Model):
     url = db.Column(db.String(300), nullable=True)
     created_at = db.Column(
         db.DateTime(), default=datetime.utcnow)
-    user_id = db.Column(db.Integer(), db.ForeignKey(
-        'users.id'), nullable=False)
+    user_id = db.Column(db.String(50), db.ForeignKey(
+        'users.public_id'), nullable=False)
     hackathon_id = db.Column(db.Integer(), db.ForeignKey(
         'hackathons.id'), nullable=True)
 
     user = db.relationship('User', backref='submissions', lazy=True)
-    hackathon = db.relationship('Hackathon', backref='submissions', lazy=True)
-
-
-# def create_tables(app)
-#     with app.app_context().push():
-#         db.create_all()
-
-# create_tables(app)

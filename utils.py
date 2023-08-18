@@ -1,4 +1,5 @@
 import secrets
+import os
 
 
 def generate_secret_key():
@@ -13,5 +14,5 @@ ALLOWED_EXTENSIONS = set(['pdf', 'png', 'jpg', 'jpeg'])
 
 
 if __name__ == "__main__":
-    print(generate_secret_key())
-    # allowed_file("hello.txt", "hello.mp2")
+    # print(generate_secret_key())
+    print(os.urandom(24))

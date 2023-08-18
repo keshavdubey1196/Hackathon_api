@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request, send_from_directory, \
-                  current_app
+    current_app
 from app.models import User, Hackathon
 from app import db
 from app.hackathons.utils import allowed_files, save_hkthon_imgs
@@ -77,8 +77,8 @@ def add_hackathon():
         return jsonify(
             {
                 "message":
-                    f"{new_hackathon.title} added id = {new_hackathon.id}"
-                }, 201)
+                    f"{new_hackathon.title} added"
+            }, 201)
     else:
         return jsonify({
             "error": "Allowed file types are jpeg, jpg, png"
@@ -98,7 +98,7 @@ def enroll():
     if not (user_id and hackathon_id):
         return jsonify({"error": "provide both user_id and hackathon_id"}, 200)
 
-    user = User.query.filter_by(id=user_id).first()
+    user = User.query.filter_by(public_id=user_id).first()
     hackathon = Hackathon.query.filter_by(id=hackathon_id).first()
 
     if user.is_admin:
@@ -121,15 +121,12 @@ def enroll():
     db.session.commit()
 
     return jsonify(
-        {"message": f"{user.name} enrolled in {hackathon.title}"}, 200)
+        {"message": f"{user.username} enrolled in {hackathon.title}"}, 200)
 
 
-@hackathons.route('/api/enrolledHackathons/<int:user_id>', methods=["GET"])
+@hackathons.route('/api/enrolledHackathons/<string:user_id>', methods=["GET"])
 def get_enrolled_hackathons(user_id):
-    if user_id != int(user_id):
-        return jsonify({"message": "Provide an integer user_id"}, 400)
-
-    user = User.query.filter_by(id=user_id).first()
+    user = User.query.filter_by(public_id=user_id).first()
 
     if not user:
         return jsonify({"error": "User not found. Wrong id!"}, 400)
@@ -141,7 +138,6 @@ def get_enrolled_hackathons(user_id):
 
     for hackathon in user.participated_hackathons:
         data = {
-            "id": hackathon.id,
             "title": hackathon.title,
             "description": hackathon.description,
             "bg_image": f"/uploads/bg_imgs/{hackathon.bg_image}",
@@ -194,5 +190,5 @@ def unenroll():
 
     return jsonify(
         {
-            "message": f"{user.name} unenrolled from {hackathon.title}"
+            "message": f"{user.username} unenrolled from {hackathon.title}"
         }, 400)

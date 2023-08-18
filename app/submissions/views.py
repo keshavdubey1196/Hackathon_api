@@ -1,5 +1,5 @@
 from flask import jsonify, request, send_from_directory, Blueprint, \
-                  current_app
+    current_app
 from app import db
 from app.models import User, Hackathon, Submission
 import os
@@ -36,7 +36,7 @@ def submission():
                 "user_id,hackathon_id and either file or url is required!"
             }, 400)
 
-    user = User.query.filter_by(id=user_id).first()
+    user = User.query.filter_by(public_id=str(user_id)).first()
     hackathon = Hackathon.query.filter_by(id=hackathon_id).first()
 
     if not user or not hackathon:
@@ -57,7 +57,7 @@ def submission():
 
     # existing submisssion
     existing_submission = Submission.query.filter_by(
-        user_id=user_id, hackathon_id=hackathon_id).first()
+        user_id=str(user_id), hackathon_id=hackathon_id).first()
     if existing_submission:
         return jsonify(
             {
@@ -79,7 +79,7 @@ def submission():
             new_submission = Submission(
                 file=filename,
                 url="None",
-                user_id=user_id,
+                user_id=str(user_id),
                 hackathon_id=hackathon_id
             )
         else:
@@ -93,7 +93,7 @@ def submission():
             new_submission = Submission(
                 file=filename,
                 url="None",
-                user_id=user_id,
+                user_id=str(user_id),
                 hackathon_id=hackathon_id
             )
         else:
@@ -110,7 +110,7 @@ def submission():
             new_submission = Submission(
                 file='None',
                 url=url,
-                user_id=user_id,
+                user_id=str(user_id),
                 hackathon_id=hackathon_id
             )
 
@@ -125,13 +125,13 @@ def submission():
     return jsonify(
         {
             "message":
-            f"{user.name} submitted to {hackathon.title} suceessfully"
+            f"{user.username} submitted to {hackathon.title} suceessfully"
         }, 200)
 
 
-@submissions.route('/api/user_submissions/<int:user_id>', methods=["GET"])
+@submissions.route('/api/user_submissions/<string:user_id>', methods=["GET"])
 def get_user_submissions(user_id):
-    user = User.query.filter_by(id=user_id).first()
+    user = User.query.filter_by(public_id=user_id).first()
 
     if not user:
         return jsonify({'error': "User not found"}, 404)
