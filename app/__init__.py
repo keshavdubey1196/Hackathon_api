@@ -3,9 +3,11 @@ from flask import Flask
 import os
 from flask_bcrypt import Bcrypt
 from app.config import Config
+from flask_migrate import Migrate
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
+migrate = Migrate()
 
 
 def create_app(config_class=Config):
@@ -13,6 +15,7 @@ def create_app(config_class=Config):
     app.config.from_object(Config)
     db.init_app(app)
     bcrypt.init_app(app)
+    migrate.init_app(app, db)
     UPLOAD_FOLDER = os.path.join(app.root_path, 'uploads')
     app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
     os.makedirs(os.path.join(UPLOAD_FOLDER, 'hakthon_imgs'), exist_ok=True)
