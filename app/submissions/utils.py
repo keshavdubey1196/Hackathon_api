@@ -33,3 +33,11 @@ def save_submisssion_files(file):
             current_app.config['UPLOAD_FOLDER'], 'submission_files', fn)
         file.save(f_path)
         return fn
+
+
+def delete_submission_file(filename):
+    if filename:
+        file_path = os.path.join(
+            current_app.config['UPLOAD_FOLDER'], 'submission_files', filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)

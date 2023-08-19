@@ -1,11 +1,13 @@
 from flask import Blueprint, jsonify, request
 from flask import make_response, current_app
-from app.models import User
+from app.models import User, Submission
 import ast
 from app import db, bcrypt
 import datetime
 import jwt
 import uuid
+from app.submissions.utils import delete_submission_file
+from app.hackathons.utils import delete_hkthon_imgs
 
 
 users = Blueprint('users', __name__)
@@ -143,15 +145,39 @@ def get_user_created_hackathons(user_id):
     return jsonify(hackathons_list, 200)
 
 
-@users.route('/api/deleteUser/<string:user_id>', methods=['GET'])
+@users.route('/api/deleteuser/<string:user_id>', methods=['DELETE'])
 def delete_user(user_id):
+    # Query the database to find the user by their ID
     user = User.query.filter_by(public_id=user_id).first()
-    if not user:
-        return jsonify({
-            "error": "User not found"
-        }, 401)
 
-    # deleting the user safely
-    db.session.delete(user)
-    db.session.commit()
-    return jsonify({"success": True})
+    if user is None:
+        return jsonify({'message': 'User not found'}, 404)
+    created_hackathons = user.created_hackathons
+    # for admin user
+    if created_hackathons:
+        for hackathon in created_hackathons:
+            submissions = Submission.query.filter_by(
+                hackathon_id=hackathon.id).all()
+
+            for submission in submissions:
+                delete_submission_file(submission.file)
+                db.session.delete(submission)
+            delete_hkthon_imgs(hackathon.bg_image)
+            delete_hkthon_imgs(hackathon.hakthon_img)
+            db.session.delete(hackathon)
+    # for normal user
+    user_submissions = Submission.query.filter_by(
+        user_id=user.public_id).all()
+    if user_submissions:
+        for submission in user_submissions:
+            delete_submission_file(submission.file)
+            db.session.delete(submission)
+    try:
+        # Delete the user from the database
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({'message': 'User deleted'}, 200)
+    except Exception:
+        # Handle any errors that may occur during deletion
+        db.session.rollback()
+        return jsonify({'message': 'Error deleting user'}, 500)
