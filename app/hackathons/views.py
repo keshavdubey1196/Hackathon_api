@@ -2,7 +2,8 @@ from flask import Blueprint, jsonify, request, send_from_directory, \
     current_app
 from app.models import User, Hackathon
 from app import db
-from app.hackathons.utils import allowed_files, save_hkthon_imgs
+from app.hackathons.utils import allowed_files, save_hkthon_imgs, \
+    delete_hkthon_imgs
 import os
 
 
@@ -192,3 +193,23 @@ def unenroll():
         {
             "message": f"{user.username} unenrolled from {hackathon.title}"
         }, 400)
+
+
+@hackathons.route('/api/deletehackathon/<int:id>', methods=['DELETE'])
+def delete_hackathon(id):
+    hackathon = Hackathon.query.filter_by(id=id).first()
+    if hackathon is None:
+        return jsonify({'message': 'Hackathon not found'}, 404)
+    # deleteing related files from system
+    delete_hkthon_imgs(hackathon.bg_image)
+    delete_hkthon_imgs(hackathon.hakthon_img)
+
+    try:
+        # Delete the hackathon from the database
+        db.session.delete(hackathon)
+        db.session.commit()
+        return jsonify({'message': 'Hackathon deleted successfully'}, 200)
+    except Exception:
+        # Handle any errors that may occur during deletion
+        db.session.rollback()
+        return jsonify({'message': 'Error deleting hackathon'}, 500)

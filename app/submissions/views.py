@@ -64,13 +64,6 @@ def submission():
                 "error": "User already have submitted on this hackathon"
             }, 409)
 
-    if not allowed_files(file.filename, ['pdf', 'png', 'jpg', 'jpeg']):
-        return jsonify(
-            {
-                "error":
-                "Invalid file type. Allowed are jpg, jpeg, pdf, png, pdf"
-            }, 400)
-
     sub_type = hackathon.submission_type.lower()
 
     if sub_type == "file":
@@ -84,7 +77,7 @@ def submission():
             )
         else:
             return jsonify({
-                "error": "This hackathon only accepts pdf files"
+                "error": "This hackathon accepts pdf files"
             }, 400)
 
     elif sub_type == "image":

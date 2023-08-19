@@ -27,3 +27,11 @@ def save_hkthon_imgs(file):
     new_file.save(picture_path)
 
     return picture_fn
+
+
+def delete_hkthon_imgs(filename):
+    if filename:
+        file_path = os.path.join(
+            current_app.config['UPLOAD_FOLDER'], 'hakthon_imgs', filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)

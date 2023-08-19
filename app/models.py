@@ -52,7 +52,7 @@ class Hackathon(db.Model):
     submissions = db.relationship(
         'Submission', backref='hackathon', lazy=True,
         cascade='all, delete-orphan')
-    creator_id = db.Column(db.String(50), db.ForeignKey('users.public_id'))
+    creator_id = db.Column(db.String(200), db.ForeignKey('users.public_id'))
 
 
 class Submission(db.Model):
@@ -63,7 +63,7 @@ class Submission(db.Model):
     url = db.Column(db.String(300), nullable=True)
     created_at = db.Column(
         db.DateTime(), default=datetime.utcnow)
-    user_id = db.Column(db.String(50), db.ForeignKey(
+    user_id = db.Column(db.String(200), db.ForeignKey(
         'users.public_id'), nullable=False)
     hackathon_id = db.Column(db.Integer(), db.ForeignKey(
         'hackathons.id'), nullable=True)
