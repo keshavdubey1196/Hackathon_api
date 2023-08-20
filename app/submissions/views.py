@@ -3,7 +3,8 @@ from flask import jsonify, request, send_from_directory, Blueprint, \
 from app import db
 from app.models import User, Hackathon, Submission
 import os
-from app.submissions.utils import save_submisssion_files, allowed_files
+from app.submissions.utils import save_submisssion_files, allowed_files, \
+    delete_submission_file
 
 
 submissions = Blueprint('submissions', __name__)
@@ -149,3 +150,22 @@ def get_user_submissions(user_id):
             user_submissions.append(user_submission)
 
     return jsonify(user_submissions, 200)
+
+
+@submissions.route('/api/deletesubmission/<int:id>', methods=['DELETE'])
+def deleteSubmission(id):
+    submission = Submission.query.filter_by(id=id).first()
+    if not submission:
+        return jsonify({
+            "error" "Submission not found"
+        }, 404)
+    if submission.file:
+        delete_submission_file(submission.file)
+    try:
+        db.session.delete(submission)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        return jsonify({
+            "error": "Submisssion cannot be deleted"
+        }, 500)

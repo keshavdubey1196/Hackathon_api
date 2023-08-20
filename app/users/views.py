@@ -1,43 +1,38 @@
 from flask import Blueprint, jsonify, request
-from flask import make_response, current_app
+# from flask import make_response, current_app
 from app.models import User, Submission
 import ast
 from app import db, bcrypt
-import datetime
-import jwt
+# import datetime
+# import jwt
 import uuid
 from app.submissions.utils import delete_submission_file
 from app.hackathons.utils import delete_hkthon_imgs
+# from functools import wraps
 
 
 users = Blueprint('users', __name__)
 
 
-@users.route('/api/login', methods=['GET'])
-def login():
-    auth = request.authorization
-    if not auth or not auth.username or not auth.password:
-        return make_response(
-            'Could not verify', 401, {
-                'WWW-Authentication': "Basic realm='login req'"})
-
-    user = User.query.filter_by(username=auth.username).first()
-    if not user:
-        return make_response(
-            'Could not verify', 401, {
-                'WWW-Authentication': "Basic realm='login req'"})
-    if bcrypt.check_password_hash(user.password, auth.password):
-        token = jwt.encode(
-            {'username': user.username,
-             'exp':
-             datetime.datetime.utcnow() + datetime.timedelta(minutes=30)},
-            current_app.config['SECRET_KEY'])
-        # print(type(token))
-        return jsonify({'token': token})
-
-    return make_response(
-        'Could not verify', 401, {
-            'WWW-Authentication': "Basic realm='login req'"})
+# def token_required(f):
+#     @wraps(f)
+#     def decorator(*args, **kwargs):
+#         token = None
+#         if 'x-access-token' in request.headers:
+#             token = request.headers['x-access-token']
+#         if not token:
+#             return jsonify({
+#                 "message": "Token missing"
+#             }, 401)
+#         try:
+#             data = jwt.decode(token, current_app.config['SECRET_KEY'])
+#             current_user = User.query.filter_by(
+#                 public_id=data['public_id']).first()
+#         except Exception:
+#             return jsonify({
+#                 "message": "Token invalid"
+#             }, 401)
+#         return f(current_user, *args, **kwargs)
 
 
 @users.route('/api/users', methods=["GET"])
@@ -181,3 +176,30 @@ def delete_user(user_id):
         # Handle any errors that may occur during deletion
         db.session.rollback()
         return jsonify({'message': 'Error deleting user'}, 500)
+
+
+# @users.route('/api/login', methods=['GET'])
+# def login():
+#     auth = request.authorization
+#     if not auth or not auth.username or not auth.password:
+#         return make_response(
+#             'Could not verify', 401, {
+#                 'WWW-Authentication': "Basic realm='login req'"})
+
+#     user = User.query.filter_by(username=auth.username).first()
+#     if not user:
+#         return make_response(
+#             'Could not verify', 401, {
+#                 'WWW-Authentication': "Basic realm='login req'"})
+#     if bcrypt.check_password_hash(user.password, auth.password):
+#         token = jwt.encode(
+#             {'public_id': user.public_id,
+#              'exp':
+#              datetime.datetime.utcnow() + datetime.timedelta(minutes=30)},
+#             current_app.config['SECRET_KEY'])
+#         # print(type(token))
+#         return jsonify({'token': token})
+
+#     return make_response(
+#         'Could not verify', 401, {
+#             'WWW-Authentication': "Basic realm='login req'"})
