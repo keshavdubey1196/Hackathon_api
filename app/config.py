@@ -13,11 +13,10 @@ load_dotenv()
 
 class Config:
     SECRET_KEY = os.environ["SECRET_KEY"]
-    # SQLALCHEMY_DATABASE_URI = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
     SQLALCHEMY_DATABASE_URI = os.environ['SQLALCHEMY_DATABASE_URI']
     FLASK_DEBUG = True
-    DB_USER = 'postgres'
-    DB_PASSWORD = os.environ["DB_PASSWORD"]
-    DB_HOST = 'localhost'
-    DB_PORT = 5432
-    DB_NAME = 'structured_hackathon_api'
+    # DB_USER = 'postgres'
+    # DB_PASSWORD = os.environ["DB_PASSWORD"]
+    # DB_HOST = 'localhost'
+    # DB_PORT = 5432
+    # DB_NAME = 'structured_hackathon_api'
